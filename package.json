@@ -1,0 +1,17 @@
+{
+  "private": true,
+  "name": "@smotaal/experimental-weblate",
+  "description": "smotaal.io/experimental-weblate",
+  "version": "0.0.1",
+  "author": "Saleh Abdel Motaal <saleh@smotaal.io>",
+  "repository": "https://github.com/SMotaal/experimental-weblate.git",
+  "license": "MIT",
+  "type": "module",
+  "exports": {},
+  "scripts": {
+    "pull:WeblateOrg/docker-compose": "git remote | grep -q 'WeblateOrg/docker-compose' || (git remote add WeblateOrg/docker-compose https://github.com/WeblateOrg/docker-compose.git; ((git stash && git subtree $([ -d sources/WeblateOrg/docker-compose ] && echo pull || echo add) --squash --prefix=sources/WeblateOrg/docker-compose WeblateOrg/docker-compose master); git stash pop));"
+  },
+  "devDependencies": {
+    "@smotaal.io/tools": "*"
+  }
+}
