@@ -9,7 +9,8 @@
   "type": "module",
   "exports": {},
   "scripts": {
-    "pull:WeblateOrg/docker-compose": "git remote | grep -q 'WeblateOrg/docker-compose' || (git remote add WeblateOrg/docker-compose https://github.com/WeblateOrg/docker-compose.git; ((git stash && git subtree $([ -d sources/WeblateOrg/docker-compose ] && echo pull || echo add) --squash --prefix=sources/WeblateOrg/docker-compose WeblateOrg/docker-compose master); git stash pop));"
+    "pull:WeblateOrg/docker-compose": "git remote | grep -q 'WeblateOrg/docker-compose' || (git remote add WeblateOrg/docker-compose https://github.com/WeblateOrg/docker-compose.git; ((git stash && git subtree $([ -d sources/WeblateOrg/docker-compose ] && echo pull || echo add) --squash --prefix=sources/WeblateOrg/docker-compose WeblateOrg/docker-compose master); git stash pop));",
+    "test:WeblateOrg/docker-compose": "(cd ./sources/WeblateOrg/docker-compose; ./test.sh);"
   },
   "devDependencies": {
     "@smotaal.io/tools": "*"
