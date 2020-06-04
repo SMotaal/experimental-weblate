@@ -1,0 +1,48 @@
+aeidon==1.7.0
+akismet==1.1
+bleach==3.1.5
+boto3==1.13.22
+celery==4.4.4
+celery-batches==0.3
+# For Azure Tenant auth
+cryptography==2.9.2
+defusedxml==0.6.0
+Django==3.0.6
+django-appconf==1.0.4
+django-auth-ldap==2.2.0
+django-crispy-forms==1.9.1
+django-redis==4.12.1
+django_compressor==2.4
+djangorestframework>=3.9,<3.12
+# Workaround for https://github.com/celery/celery/issues/6145
+future
+git-review==1.28.0
+hiredis==1.0.1
+httpretty==1.0.2
+https://github.com/coderanger/supervisor-stdout/archive/87d672c72664f89250f08693505e02d0905926a1.zip
+jellyfish==0.8.2
+kombu==4.6.10
+mercurial==5.4
+openpyxl==3.0.1
+phply==1.2.5
+psycopg2==2.8.5
+python-dateutil==2.8.1
+python3-saml==1.9.0
+pyuca==1.2
+raven
+redis==3.5.3
+responses>=0.10.1,<0.11.0
+rollbar
+ruamel.yaml==0.16.10
+selenium
+setuptools
+siphashc==1.3
+social-auth-app-django==3.4.0
+social-auth-core[openidconnect]==3.3.3
+supervisor==4.2.0
+tesserocr==2.5.1
+translate-toolkit==2.5.1
+Whoosh==2.7.4
+zeep==3.4.0
+# Following are installed using apt:
+# lxml
