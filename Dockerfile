@@ -1,0 +1,147 @@
+FROM debian:10.4-slim
+MAINTAINER Michal Čihař <michal@cihar.com>
+ENV VERSION 4.0.4
+LABEL version=$VERSION
+ARG TARGETARCH
+
+# Add user early to get a consistent userid
+# - the root group so it can run with any uid
+# - the tty group for /dev/std* access
+RUN useradd --shell /bin/sh --user-group weblate --groups root,tty \
+  && mkdir -p /home/weblate/.ssh \
+  && touch /home/weblate/.ssh/authorized_keys \
+  && chown -R weblate:weblate /home/weblate \
+  && chmod 700 /home/weblate/.ssh
+
+ENV HOME=/home/weblate
+
+# This is needed to run tests inside the container.
+RUN install -d -o weblate -g weblate -m 755 /usr/local/lib/python3.7/dist-packages/data-test /usr/local/lib/python3.7/dist-packages/test-images \
+ && install -d -o weblate -g weblate -m 755 /app/data
+
+# Configure utf-8 locales to make sure Python
+# correctly handles unicode filenames, configure settings
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8 DJANGO_SETTINGS_MODULE=weblate.settings_docker
+
+COPY requirements.txt patches /usr/src/weblate/
+
+# Install dependencies
+RUN set -x \
+  && export DEBIAN_FRONTEND=noninteractive \
+  && apt-get update \
+  && apt-get -y upgrade \
+  && apt-get install --no-install-recommends -y \
+    uwsgi \
+    uwsgi-plugin-python3 \
+    nginx \
+    openssh-client \
+    ca-certificates \
+    curl \
+    gir1.2-pango-1.0 \
+    libxmlsec1-openssl \
+    libjpeg62-turbo \
+    python3-gi \
+    python3-gi-cairo \
+    python3-cairo \
+    python3-pip \
+    python3-lxml \
+    python3-setuptools \
+    python3-wheel \
+    python3-gdbm \
+    gettext \
+    postgresql-client \
+    git \
+    git-svn \
+    gnupg \
+    subversion \
+    pkg-config \
+    python3-dev \
+    libxml2-dev \
+    libacl1-dev \
+    libxmlsec1-dev \
+    libleptonica-dev \
+    libtesseract-dev \
+    libsasl2-dev \
+    libldap2-dev \
+    libssl-dev \
+    libffi-dev \
+    libpq-dev \
+    libz-dev \
+    libjpeg62-turbo-dev \
+    libenchant1c2a \
+    cython3 \
+    gcc \
+    g++ \
+    tesseract-ocr \
+    patch \
+  && pip3 install Weblate==$VERSION -r /usr/src/weblate/requirements.txt \
+  && python3 -c 'from phply.phpparse import make_parser; make_parser()' \
+  && ln -s /usr/local/share/weblate/examples/ /app/ \
+  && apt-get -y purge \
+    python3-dev \
+    pkg-config \
+    libleptonica-dev \
+    libtesseract-dev \
+    libxml2-dev \
+    libffi-dev \
+    libxmlsec1-dev \
+    libpq-dev \
+    cython \
+    gcc \
+    g++ \
+    libsasl2-dev \
+    libldap2-dev \
+    libssl-dev \
+    libz-dev   \
+    libjpeg62-turbo-dev \
+  && apt-get -y autoremove \
+  && apt-get clean \
+  && rm -rf /root/.cache /tmp/* /var/lib/apt/lists/*
+
+# Apply hotfixes on Weblate
+RUN find /usr/src/weblate -name '*.patch' -print0 | sort -z | \
+  xargs -n1 -0 -r patch -p0 -d /usr/local/lib/python3.7/dist-packages/ -i
+
+# Install Hub
+RUN curl --cacert /etc/ssl/certs/ca-certificates.crt -L https://github.com/github/hub/releases/download/v2.13.0/hub-linux-${TARGETARCH:-amd64}-2.13.0.tgz | tar xzv --wildcards hub-linux*/bin/hub && \
+  cp hub-linux-*/bin/hub /usr/bin && \
+  rm -rf hub-linux-*
+
+# Install Lab
+RUN \
+  if [ ${TARGETARCH:-amd64} = "amd64" ] ; then  \
+  curl --cacert /etc/ssl/certs/ca-certificates.crt -L "https://github.com/zaquestion/lab/releases/download/v0.17.2/lab_0.17.2_linux_${TARGETARCH:-amd64}.tar.gz" | tar -C /tmp/ -xzf - \
+  && mv /tmp/lab /usr/bin \
+  && chmod u+x /usr/bin/lab ; \
+  fi
+
+# Configuration for Weblate, nginx, uwsgi and supervisor
+COPY etc /etc/
+
+# Fix permissions and adjust files to be able to edit them as user on start
+# - localtime/timezone is needed for setting system timezone based on environment
+# - we generate nginx configuration based on environment
+# - autorize passwd edition so we can fix weblate uid on startup
+# - log, run and home directories
+# - disable su for non root to avoid privilege escapation by chaging /etc/passwd
+RUN rm -f /etc/localtime && cp /usr/share/zoneinfo/Etc/UTC /etc/localtime \
+  && chgrp -R 0 /etc/nginx/sites-available/ /var/log/nginx/ /var/lib/nginx /app/data /run /home/weblate /etc/timezone /etc/localtime \
+  && chmod -R 770 /etc/nginx/sites-available/ /var/log/nginx/ /var/lib/nginx /app/data /run /home /home/weblate /etc/timezone /etc/localtime \
+  && chmod 664 /etc/passwd /etc/group \
+  && sed -i '/pam_rootok.so/a auth requisite pam_deny.so' /etc/pam.d/su
+
+# Search path for custom modules
+RUN echo "/app/data/python" > /usr/local/lib/python3.7/dist-packages/weblate-docker.pth
+
+# Entrypoint
+COPY start /app/bin/
+RUN chmod a+rx /app/bin/start
+
+EXPOSE 8080 4443
+
+# Numerical value is needed for OpenShift S2I, see
+# https://docs.openshift.com/container-platform/latest/openshift_images/create-images.html
+USER 1000
+
+ENTRYPOINT ["/app/bin/start"]
+CMD ["runserver"]
