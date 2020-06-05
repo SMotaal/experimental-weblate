@@ -14,6 +14,8 @@ This repository uses a locally hosted Weblate container intended to be used on e
 
 This code is cloned directly from the [WeblateOrg/docker-compose][] into `sources/WeblateOrg/docker-compose`.
 
+> After `cloning` the repo, run `npm run test:WeblateOrg/docker-compose` locally
+
 You can use `npm run pull:WeblateOrg/docker-compose` which will pull the latest version of the codebase using `subtree` as follows:
 
 1. Local configure the `WeblateOrg/docker-compose` remote pointing to `https://github.com/WeblateOrg/docker-compose.git` if necessary.
