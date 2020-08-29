@@ -13,10 +13,14 @@
     "pull:WeblateOrg/docker-compose": "git remote | grep -q 'WeblateOrg/docker-compose' || (git remote add WeblateOrg/docker-compose https://github.com/WeblateOrg/docker-compose.git; ((git stash && git subtree $([ -d sources/WeblateOrg/docker-compose ] && echo pull || echo add) --squash --prefix=sources/WeblateOrg/docker-compose WeblateOrg/docker-compose master); git stash pop));",
     "test:WeblateOrg/docker-compose": "(cd ./sources/WeblateOrg/docker-compose && ./test.sh);",
     "build:WeblateOrg/docker-compose": "(cd ./sources/WeblateOrg/docker-compose/ && docker-compose build);",
-    "start:WeblateOrg/docker-compose": "(cd ./sources/WeblateOrg/docker-compose/ && docker-compose stop && docker-compose build && docker-compose up);",
+    "prestart:WeblateOrg/docker-compose": "$npm_execpath run stop:WeblateOrg/docker-compose; $npm_execpath run build:WeblateOrg/docker-compose;",
+    "start:WeblateOrg/docker-compose": "(cd ./sources/WeblateOrg/docker-compose/ && docker-compose up);",
+    "stop:WeblateOrg/docker-compose": "[ ! -d ./sources/WeblateOrg/docker-compose/ ] || (cd ./sources/WeblateOrg/docker-compose/ && docker-compose stop);",
     "build:weblate": "$npm_execpath run build:WeblateOrg/docker-compose",
     "start:weblate": "$npm_execpath run start:WeblateOrg/docker-compose",
-    "serve": "$npm_execpath run start:weblate"
+    "stop:weblate": "$npm_execpath run stop:WeblateOrg/docker-compose",
+    "serve": "$npm_execpath run start:weblate",
+    "docker:stop:all": "docker stop $(docker ps -a -q)"
   },
   "devDependencies": {
     "@smotaal.io/tools": "*"
